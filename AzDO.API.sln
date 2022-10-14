@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzDO.API.Tests", "AzDO.API.Tests\AzDO.API.Tests.csproj", "{8142D427-3EB3-4136-B07A-DF0E21CE6868}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzDO.API.Wrappers", "AzDO.API.Wrappers\AzDO.API.Wrappers.csproj", "{F17DB670-6460-4DF6-B87A-AD6747B4E6FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzDO.API.Base", "AzDO.API.Base\AzDO.API.Base.csproj", "{5F66CAA7-A226-4211-969B-26080B1D35FF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8142D427-3EB3-4136-B07A-DF0E21CE6868}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8142D427-3EB3-4136-B07A-DF0E21CE6868}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8142D427-3EB3-4136-B07A-DF0E21CE6868}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8142D427-3EB3-4136-B07A-DF0E21CE6868}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F17DB670-6460-4DF6-B87A-AD6747B4E6FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F17DB670-6460-4DF6-B87A-AD6747B4E6FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F17DB670-6460-4DF6-B87A-AD6747B4E6FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F17DB670-6460-4DF6-B87A-AD6747B4E6FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F66CAA7-A226-4211-969B-26080B1D35FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F66CAA7-A226-4211-969B-26080B1D35FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F66CAA7-A226-4211-969B-26080B1D35FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F66CAA7-A226-4211-969B-26080B1D35FF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B9EA2455-38B9-4921-8540-68A471705B41}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://dev.azure.com/aksrinivas
+		SccProjectUniqueName0 = AzDO.API.Tests\\AzDO.API.Tests.csproj
+		SccProjectName0 = AzDO.API.Tests
+		SccAuxPath0 = https://dev.azure.com/aksrinivas
+		SccLocalPath0 = AzDO.API.Tests
+		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName1 = AzDO.API.Wrappers\\AzDO.API.Wrappers.csproj
+		SccProjectName1 = AzDO.API.Wrappers
+		SccAuxPath1 = https://dev.azure.com/aksrinivas
+		SccLocalPath1 = AzDO.API.Wrappers
+		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName2 = AzDO.API.Base\\AzDO.API.Base.csproj
+		SccProjectName2 = AzDO.API.Base
+		SccAuxPath2 = https://dev.azure.com/aksrinivas
+		SccLocalPath2 = AzDO.API.Base
+		SccProvider2 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+	EndGlobalSection
+EndGlobal
