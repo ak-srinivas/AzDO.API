@@ -44,10 +44,10 @@ namespace AzDO.API.Tests.Git.PullRequestReviewers
 
                             if (pullRequestId.Equals(15976))
                             {
-                                GitPullRequest gitPullRequestToUpdate = _pullRequestsCustomWrapper.GetPullRequestById(ProjectNames.YourProjectName, pullRequestId);
-                                IdentityRefWithVote identityRefWithVotes = gitPullRequestToUpdate.Reviewers.Where(obj => obj.UniqueName.Equals(Emails.EmaildName1, StringComparison.OrdinalIgnoreCase)).Select(item => item).FirstOrDefault();
+                                GitPullRequest gitPullRequestToUpdate = _pullRequestsCustomWrapper.GetPullRequestById(ProjectNames.Ploceus, pullRequestId);
+                                IdentityRefWithVote identityRefWithVotes = gitPullRequestToUpdate.Reviewers.Where(obj => obj.UniqueName.Equals(Emails.Srinivas, StringComparison.OrdinalIgnoreCase)).Select(item => item).FirstOrDefault();
 
-                                if (identityRefWithVotes != null && identityRefWithVotes.UniqueName.Equals(Emails.EmaildName1, StringComparison.OrdinalIgnoreCase))
+                                if (identityRefWithVotes != null && identityRefWithVotes.UniqueName.Equals(Emails.Srinivas, StringComparison.OrdinalIgnoreCase))
                                 {
                                     identityRefWithVotes.Vote = 10; // Approved
                                 }
@@ -64,7 +64,7 @@ namespace AzDO.API.Tests.Git.PullRequestReviewers
             }
 
             //GitPullRequest gitPullRequestToUpdate = null;
-            //string project = ProjectNames.YourProjectName;
+            //string project = ProjectNames.Ploceus;
 
             //GitPullRequest pullRequest = _pullRequestsCustomWrapper.UpdatePullRequest(gitPullRequestToUpdate, project, repositoryId, pullRequestId);
             Console.WriteLine();

@@ -71,18 +71,27 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
         public void CreateTestCases_And_AddUnder_TestSuite()
         {
             int planId = TestPlanId; // [Created-Using-RestAPI] Sample Test Plan (ID: 308876)
-            int suiteId = 292; // Key Vault
+            int suiteId = 525; // Key Vault
 
             List<string> titles = new List<string>()
             {
-                "Verify that the 'Subscription' information exists",
-                "Verify that the 'Resource Group' name exists",
-                "Verify that the 'Key Vault Name' exists",
-                "Verify that the 'Region' name exists",
-                "Verify that the 'Pricing Tier (Standard/Premium)' exists",
-                "Verify for the existence of an input for 'Days To Retain Deleted Vaults'",
-                "Verify for the existence of an input for 'Access Configuration'",
-                "Verify for the existence of an input for 'Enable Public Access (Yes/No) or Create A Private Endpoint",
+                "Create VM with data disk, after VM gets provisoned create and attach new data disk",
+"Create another VM and swap OS disk with the one that you created earlier",
+"Create VM, create snapshot of OS disk with snapshot type as Full",
+"Create VM, create snapshot of OS disk with snapshot type as Incremental",
+"Create VM, create snapshot of OS disk with encryption types (3 Types)",
+"Create VM, create snapshot of OS disk and enable access to your snapshot either publicly using public IP addresses or privately using private endpoints",
+"Create VM, resize from B2s to B4ms and verify for 4 CPUs and 16GiB RAM, the VM should restart",
+"Create VM, go to extensions and uninstall extensions",
+"Create VM, add new extension like (Azure Performance Diagnostics Extension) and verify its installation from within the VM",
+"Create VM, add VM applications",
+"[Not Sure] Create VM and update fault, update, availability set and VM scale set",
+"Create VM by choosing an existing Windows Server License",
+"Create VM and create a user assigned managed identity so that the VM authenticates with cloud services role",
+"Create locks on subscription or resource group or vm scope",
+"Create VM, update auto-shutdown settings",
+"Create VM, enable backup",
+"Create VM, and setup disaster recovery",
             };
 
             foreach (string title in titles)
@@ -91,7 +100,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                 {
                     WorkItemType = WorkItemTypeEnum.TestCase,
                     Title = title,
-                    AssignedTo = Emails.EmaildName2,
+                    AssignedTo = Emails.Srinivas,
                     AreaPath = AREA,
                     IterationPath = ITERATION,
                 };
@@ -120,7 +129,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                 {
                     WorkItemType = WorkItemTypeEnum.TestCase,
                     Title = title,
-                    AssignedTo = Emails.EmaildName1,
+                    AssignedTo = Emails.Srinivas,
                     AreaPath = AREA,
                     IterationPath = ITERATION,
                 };

@@ -17,7 +17,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
         [TestMethod]
         public void UpdateTestSuite()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int suiteId = 123141; // Sprint 2022.04
 
             string sprintName = "Sprint 2022.04";

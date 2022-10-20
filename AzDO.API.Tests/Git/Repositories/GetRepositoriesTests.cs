@@ -22,14 +22,14 @@ namespace AzDO.API.Tests.Git.Repositories
             bool includeAllUrls = false;
             bool includeHidden = false;
 
-            List<GitRepository> gitRepos = _repositoriesCustomWrapper.GetRepositories(ProjectNames.YourProjectName, includeLinks, includeAllUrls, includeHidden);
+            List<GitRepository> gitRepos = _repositoriesCustomWrapper.GetRepositories(ProjectNames.Ploceus, includeLinks, includeAllUrls, includeHidden);
             Assert.IsTrue(gitRepos != null && gitRepos.Count > 0, $"No git repositories were found.");
         }
 
         [TestMethod]
         public void GetRepositoryNames()
         {
-            SortedSet<string> gitRepoNames = _repositoriesCustomWrapper.GetRepositoryNames(ProjectNames.YourProjectName);
+            SortedSet<string> gitRepoNames = _repositoriesCustomWrapper.GetRepositoryNames(ProjectNames.Ploceus);
             Assert.IsTrue(gitRepoNames.Count > 0, $"No git repositories were found.");
         }
     }

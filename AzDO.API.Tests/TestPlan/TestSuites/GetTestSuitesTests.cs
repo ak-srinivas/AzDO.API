@@ -18,7 +18,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
         [TestMethod]
         public void GetTestSuiteById()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int planId = 104912;
             int suiteId = 104916;
             SuiteExpand expand = SuiteExpand.Children;
@@ -38,7 +38,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
         [TestMethod]
         public void GetTestSuitesForPlan()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int planId = 121077;
             SuiteExpand expand = SuiteExpand.Children;
             string continuationToken = null;
@@ -51,7 +51,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
         [TestMethod]
         public void GetTestSuiteByNameWithinTestPlan()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int planId = 121077;
             string suiteName = "Sprint 2022.07";
 

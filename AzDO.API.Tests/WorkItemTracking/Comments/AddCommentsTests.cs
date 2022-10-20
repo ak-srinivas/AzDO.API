@@ -25,7 +25,7 @@ namespace AzDO.API.Tests.WorkItemTracking.Comments
         [TestMethod]
         public void Add_Ready_For_The_Demo_Comment()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             string text = "Ready for the demo!";
 
             const string sprintNumber = "2022.19";
@@ -36,7 +36,7 @@ namespace AzDO.API.Tests.WorkItemTracking.Comments
             List<TeamSettingsIteration> teamSettingsIterations = _iterationsCustomWrapper.GetTeamIterations(teamContext);
             Guid iterationId = teamSettingsIterations.Where(item => item.Name.Equals(iterationName)).Select(item => item.Id).FirstOrDefault();
 
-            //List<int> storyIds = _iterationsCustomWrapper.GetQAWorkItemIds_InIteration_FilterBy_EmailIds(iterationId, new List<string>() { Emails.EmaildName1 });
+            //List<int> storyIds = _iterationsCustomWrapper.GetQAWorkItemIds_InIteration_FilterBy_EmailIds(iterationId, new List<string>() { Emails.Srinivas });
             List<int> storyIds = new List<int>() { 164395 };
 
             foreach (int storyId in storyIds)

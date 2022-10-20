@@ -43,7 +43,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
                 "Virtual Network"
             };
 
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             //string sprintName = "Sprint 2022.04";
 
             foreach (string suiteName in suiteNames)
@@ -68,7 +68,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
         [TestMethod]
         public void FindRequirementBasedSuites_ThatAreNotInAGivenSprint()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
 
             const string sprintNumber = "2022.12";
             string sprintName = $"Sprint {sprintNumber}";
@@ -80,7 +80,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
             List<TeamSettingsIteration> teamSettingsIterations = _iterationsCustomWrapper.GetTeamIterations(teamContext);
             Guid iterationId = teamSettingsIterations.Where(item => item.Name.Equals(iterationName)).Select(item => item.Id).FirstOrDefault();
 
-            List<int> storyIdsFromSprintBoard = _iterationsCustomWrapper.GetQAWorkItemIds_InIteration_FilterBy_EmailIds(iterationId, new List<string>() { Emails.EmaildName1 });
+            List<int> storyIdsFromSprintBoard = _iterationsCustomWrapper.GetQAWorkItemIds_InIteration_FilterBy_EmailIds(iterationId, new List<string>() { Emails.Srinivas });
 
             if (storyIdsFromSprintBoard.Count > 0)
             {
@@ -108,7 +108,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
         [TestMethod]
         public void CreateTestSuite_ChangeIteration_AddRequirementBasedSuite_ForAGivenSprint()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
 
             const string sprintNumber = "2022.19";
             string sprintName = $"Sprint {sprintNumber}";
@@ -121,7 +121,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
             Guid iterationId = teamSettingsIterations.Where(item => item.Name.Equals(iterationName)).Select(item => item.Id).FirstOrDefault();
 
             List<int> storyIdsFromSprintBoard = _iterationsCustomWrapper.
-                GetQAWorkItemIds_InIteration_FilterBy_EmailIds(iterationId, new List<string>() { Emails.EmaildName1 });
+                GetQAWorkItemIds_InIteration_FilterBy_EmailIds(iterationId, new List<string>() { Emails.Srinivas });
 
             if (storyIdsFromSprintBoard.Count > 0)
             {

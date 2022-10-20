@@ -39,7 +39,7 @@ namespace AzDO.API.Tests.Git.PullRequests
         public void GetPullRequestById()
         {
             int pullRequestId = 20740;
-            GitPullRequest gitPullRequestToUpdate = _pullRequestsCustomWrapper.GetPullRequestById(ProjectNames.YourProjectName, pullRequestId);
+            GitPullRequest gitPullRequestToUpdate = _pullRequestsCustomWrapper.GetPullRequestById(ProjectNames.Ploceus, pullRequestId);
             Console.WriteLine();
         }
     }

@@ -42,7 +42,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
             };
 
             var getIterationsTests = new GetIterationsTests();
-            //SortedSet<int> parentIds = _iterationsCustomWrapper.GetQAWorkItemIds_In_CurrentIteration_FilterBy_EmailIds(new List<string>() { Emails.EmaildName1 });
+            //SortedSet<int> parentIds = _iterationsCustomWrapper.GetQAWorkItemIds_In_CurrentIteration_FilterBy_EmailIds(new List<string>() { Emails.Srinivas });
 
             // Note: Change Iteration Path First
             List<int> parentIds = new List<int>() { 164395, 159273 };
@@ -67,7 +67,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                     var updateTaskRequest = new UpdateTaskRequest()
                     {
                         WorkItemId = (int)newTask.Id,
-                        AssignedTo = Emails.EmaildName1,
+                        AssignedTo = Emails.Srinivas,
 
                         Priority = "2",
                         Activity = taskData.Item2,
@@ -97,7 +97,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                 Title = "AzDO SDK TestCase-5",
                 AreaPath = AREA,
                 IterationPath = ITERATION,
-                AssignedTo = Emails.EmaildName1, // Input your email id here
+                AssignedTo = Emails.Srinivas, // Input your email id here
 
                 Description = "This is a sample test case created to test the working of azure devops automation.",
                 Priority = "1",
@@ -130,7 +130,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                 WorkItemId = 121131,
                 //Title = title,
                 Steps = copySteps,
-                AssignedTo = Emails.EmaildName1,
+                AssignedTo = Emails.Srinivas,
 
                 AutomatedTestName = string.Empty,
                 AutomatedTestStorage = string.Empty,
@@ -145,8 +145,8 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
         public void UpdateCompletedHours_ForMyClosedTasks_InCurrentIteration()
         {
             // Get my tasks from current iteration
-            SortedSet<int> myStoryIds = _iterationsCustomWrapper.GetQAWorkItemIds_In_CurrentIteration_FilterBy_EmailIds(new List<string>() { Emails.EmaildName1 });
-            SortedSet<int> myTaskIds = _workItemsCustomWrapper.GetTaskWorkItemIds_FilterBy_EmailId(myStoryIds, Emails.EmaildName1);
+            SortedSet<int> myStoryIds = _iterationsCustomWrapper.GetQAWorkItemIds_In_CurrentIteration_FilterBy_EmailIds(new List<string>() { Emails.Srinivas });
+            SortedSet<int> myTaskIds = _workItemsCustomWrapper.GetTaskWorkItemIds_FilterBy_EmailId(myStoryIds, Emails.Srinivas);
 
             foreach (int taskId in myTaskIds)
             {

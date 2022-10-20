@@ -18,7 +18,7 @@ namespace AzDO.API.Tests.TestPlan.TestSuiteEntry
         [TestMethod]
         public void GetSuiteEntries()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int suiteId = 126043;
             SuiteEntryTypes? suiteEntryType = SuiteEntryTypes.TestCase;
 

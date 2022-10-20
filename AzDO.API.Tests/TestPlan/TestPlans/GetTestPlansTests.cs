@@ -17,7 +17,7 @@ namespace AzDO.API.Tests.TestPlan.TestPlans
         [TestMethod]
         public void GetTestPlans()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             string owner = null;
             string continuationToken = null;
             bool includePlanDetails = true;
@@ -30,7 +30,7 @@ namespace AzDO.API.Tests.TestPlan.TestPlans
         [TestMethod]
         public void GetTestPlanById()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int planId = 104912;
 
             Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi.TestPlan testPlan = _testPlansCustomWrapper.GetTestPlanById(project, planId);

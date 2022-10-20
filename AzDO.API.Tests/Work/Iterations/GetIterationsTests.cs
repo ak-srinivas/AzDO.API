@@ -89,7 +89,7 @@ namespace AzDO.API.Tests.Work.Iterations
                 List<TeamSettingsIteration> teamSettingsIterations = _iterationsCustomWrapper.GetTeamIterations(teamContext);
                 Guid iterationId = teamSettingsIterations.Where(item => item.Name.Equals(iterationName)).Select(item => item.Id).FirstOrDefault();
 
-                DataTable csvTable = _iterationsCustomWrapper.GetMyWorkItems_InIteration(iterationId, Emails.EmaildName1, iterationName);
+                DataTable csvTable = _iterationsCustomWrapper.GetMyWorkItems_InIteration(iterationId, Emails.Srinivas, iterationName);
                 tables.Add(csvTable);
             }
 

@@ -17,7 +17,7 @@ namespace AzDO.API.Tests.TestPlan.TestPoint
         [TestMethod]
         public void GetPointsList()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int planId = 104912;
             int suiteId = 104916;
             string testPointIds = null;
@@ -34,7 +34,7 @@ namespace AzDO.API.Tests.TestPlan.TestPoint
         [TestMethod]
         public void GetPoints()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int planId = 0;
             int suiteId = 0;
             string pointIds = "";

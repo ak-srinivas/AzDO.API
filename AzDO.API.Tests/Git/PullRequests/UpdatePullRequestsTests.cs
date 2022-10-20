@@ -21,7 +21,7 @@ namespace AzDO.API.Tests.Git.PullRequests
             // Note: You cannot approve pull requests using this API.
 
             GitPullRequest gitPullRequestToUpdate = null;
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             var repositoryId = "Your Repo Name";
             int pullRequestId = 0;
 

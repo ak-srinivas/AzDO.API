@@ -17,7 +17,7 @@ namespace AzDO.API.Tests.TestPlan.Configurations
         [TestMethod]
         public void GetTestConfigurations()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             string continuationToken = null;
 
             List<Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi.TestConfiguration> testConfigurations = _configurationsCustomWrapper.GetTestConfigurations(project, continuationToken);
@@ -27,7 +27,7 @@ namespace AzDO.API.Tests.TestPlan.Configurations
         [TestMethod]
         public void GetTestConfigurationById()
         {
-            string project = ProjectNames.YourProjectName;
+            string project = ProjectNames.Ploceus;
             int testConfigurationId = 2;
 
             Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi.TestConfiguration testConfiguration = _configurationsCustomWrapper.GetTestConfigurationById(project, testConfigurationId);

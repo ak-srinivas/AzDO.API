@@ -45,7 +45,7 @@ namespace AzDO.API.Tests.Git.Refs
             Directory.CreateDirectory(folderPath);
             File.Delete(outputFile);
 
-            SortedSet<string> repoNames = _refsCustomWrapper.GetRepositoryNames_IfOurBranchExists(ProjectNames.YourProjectName, branchName);
+            SortedSet<string> repoNames = _refsCustomWrapper.GetRepositoryNames_IfOurBranchExists(ProjectNames.Ploceus, branchName);
             if (repoNames.Count > 0)
             {
                 using (StreamWriter swriter = new StreamWriter(outputFile, true))
@@ -73,7 +73,7 @@ namespace AzDO.API.Tests.Git.Refs
             {
                 string branchName = $"SS-2021.{i}";
 
-                SortedSet<string> repoNames = _refsCustomWrapper.GetRepositoryNames_IfOurBranchExists(ProjectNames.YourProjectName, branchName);
+                SortedSet<string> repoNames = _refsCustomWrapper.GetRepositoryNames_IfOurBranchExists(ProjectNames.Ploceus, branchName);
                 if (repoNames.Count > 0)
                 {
                     using (StreamWriter swriter = new StreamWriter(outputFile, true))
