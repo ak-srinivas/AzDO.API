@@ -1,4 +1,5 @@
-﻿using AzDO.API.Base.Common.Utilities;
+﻿using AzDO.API.Base.Common;
+using AzDO.API.Base.Common.Utilities;
 using AzDO.API.Base.CustomWrappers.WorkItemTracking.WorkItems;
 using AzDO.API.Wrappers.WorkItemTracking.WorkItemTypesField;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
@@ -7,6 +8,7 @@ using Microsoft.VisualStudio.Services.WebApi.Patch;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
@@ -18,6 +20,137 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
         public WorkItemsCustomWrapper()
         {
             _workItemTypesFieldCustomWrapper = new WorkItemTypesFieldCustomWrapper();
+        }
+
+        public List<int> GetFewUserStories(int parentWorkItemId, string filterWord = "Test Plan Execution")
+        {
+            var ids = new List<int>();
+            var workItemResponse = GetWorkItem(parentWorkItemId);
+            foreach (WorkItemRelation relations in workItemResponse.Relations)
+            {
+                int childWorkItemId = Convert.ToInt32(relations.Url.Split("/").Last());
+                var relationsWorkItem = GetWorkItem(childWorkItemId);
+                string title = relationsWorkItem.Fields[FieldNames.SystemTitle].ToString().Trim();
+                if (title.Contains(filterWord))
+                {
+                    ids.Add(childWorkItemId);
+                }
+            }
+
+            return ids;
+        }
+
+        public void CreateQAUserStories(int parentWorkItemId)
+        {
+            string prepTag = "test case prep";
+            string execTag = "test case exec";
+
+            var workItemResponse = GetWorkItem(parentWorkItemId);
+            foreach (WorkItemRelation relations in workItemResponse.Relations)
+            {
+                int childWorkItemId = Convert.ToInt32(relations.Url.Split("/").Last());
+                if (childWorkItemId == 50 || childWorkItemId == parentWorkItemId)
+                    continue;
+
+                var relationsWorkItem = GetWorkItem(childWorkItemId);
+                string title = relationsWorkItem.Fields[FieldNames.SystemTitle].ToString().Trim();
+                string keyword = "";
+
+                if (title.Contains(" "))
+                    keyword = title.Split(" ")[1].Trim().Replace("v3.9.0", string.Empty).Replace("_v3.9.0.", string.Empty).Replace(":", string.Empty);
+                else
+                    keyword = title.Trim().Replace("v3.9.0", string.Empty).Replace("_v3.9.0.", string.Empty).Replace(":", string.Empty);
+
+                string creationTitle = $"{keyword} Test Plan Creation";
+                string executionTitle = $"{keyword} Test Plan Execution";
+
+                var creationRequest = new CreateWorkItemRequest()
+                {
+                    WorkItemType = WorkItemTypeEnum.UserStory,
+                    Title = creationTitle,
+                    AreaPath = "Ploceus",
+                    IterationPath = "Ploceus",
+
+                    Tags = new List<string>()
+                    {
+                        prepTag
+                    }
+                };
+
+                var executionRequest = new CreateWorkItemRequest()
+                {
+                    WorkItemType = WorkItemTypeEnum.UserStory,
+                    Title = executionTitle,
+
+                    AreaPath = "Ploceus",
+                    IterationPath = "Ploceus",
+
+                    Tags = new List<string>()
+                    {
+                        execTag
+                    }
+                };
+
+                WorkItem creationWIT = CreateWorkItem(creationRequest);
+                WorkItem executionWIT = CreateWorkItem(executionRequest);
+
+                var updateUSCreation= new UpdateUserStoryRequest()
+                {
+                    Description = creationTitle,
+                    DueDate = "2022-11-05T00:00:00Z",
+                    WorkItemId = (int)creationWIT.Id,
+                    ParentWorkItemId = 830 // QA Activities
+                };
+
+                var updateUSExecution = new UpdateUserStoryRequest()
+                {
+                    Description = executionTitle,
+                    DueDate = "2022-11-05T00:00:00Z",
+                    WorkItemId = (int)executionWIT.Id,
+                    ParentWorkItemId = 830 // QA Activities
+                };
+
+                var updateUserStoryWorkItem = new UpdateUserStoryRequest()
+                {
+                    WorkItemId = childWorkItemId,
+
+                    RelatedTo = new List<int>()
+                    {
+                        (int)creationWIT.Id,
+                        (int)executionWIT.Id
+                    }
+                };
+
+                WorkItem updateCreationWIT_Update = UpdateUserStoryWorkItem(updateUSCreation);
+                WorkItem updateExecutionWIT_Update = UpdateUserStoryWorkItem(updateUSExecution);
+                WorkItem updatedWorkItem = UpdateUserStoryWorkItem(updateUserStoryWorkItem);
+            }
+            Console.WriteLine();
+        }
+
+        public WorkItem AddUserStoryToFeature(UpdateWorkItemRequest request)
+        {
+            JsonPatchDocument patchDocument = new JsonPatchDocument();
+            Dictionary<string, string> taskReferenceNames = Helpers.GetFieldNamesWithRefNames();
+
+            if (request.ParentWorkItemId != 0)
+            {
+                var pathOperation = new JsonPatchOperation()
+                {
+                    Operation = Operation.Add,
+                    Path = "/relations/-",
+                    Value = new Link()
+                    {
+                        //Add a parent link
+                        Rel = FieldNames.SystemLinkTypesHierarchyReverse,
+                        Url = $"https://dev.azure.com/{GetOrganizationName()}/{GetProjectName()}/_apis/wit/workItems/{request.ParentWorkItemId}",
+                    },
+                };
+
+                patchDocument.Add(pathOperation);
+            }
+
+            return UpdateWorkItem(patchDocument, request.WorkItemId);
         }
 
         public WorkItem CreateWorkItem(CreateWorkItemRequest request)
@@ -68,6 +201,98 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
 
             WorkItem createdWorkItem = CreateWorkItem(patchDocument, request.WorkItemType);
             return createdWorkItem;
+        }
+
+        public WorkItem UpdateUserStoryWorkItem(UpdateUserStoryRequest request)
+        {
+            string tagValue = null;
+            JsonPatchDocument patchDocument = new JsonPatchDocument();
+            Dictionary<string, string> referenceNames = _workItemTypesFieldCustomWrapper.GetFieldsNameWithReferenceNames(WorkItemTypeEnum.UserStory);
+
+            if (string.IsNullOrEmpty(request.AssignedTo))
+            {
+                // If AssignedTo is null or empty then assign empty string otherwise
+                request.AssignedTo = null;
+            }
+
+            // If tagValue is null or empty then assign empty string otherwise do nothing.
+            if (request.Tags != null && request.Tags.Count > 0)
+                tagValue = string.Join(",", request.Tags);
+
+            string titlePath = referenceNames["Title"];
+            string descriptionPath = referenceNames["Description"];
+            string areaPath = referenceNames["Area Path"];
+            string iterationPath = referenceNames["Iteration Path"];
+            string tagPath = referenceNames["Tags"];
+            string assignedToPath = referenceNames["Assigned To"];
+            string dueDatePath = referenceNames["Due Date"];
+            string acceptanceCriteriaPath = referenceNames["Acceptance Criteria"];
+
+            var pathsAndValues = new Dictionary<string, string>
+            {
+                { titlePath, request.Title },
+                { areaPath, request.AreaPath },
+                { iterationPath, request.IterationPath },
+                { tagPath, tagValue },
+                { assignedToPath, request.AssignedTo },
+
+                { descriptionPath, request.Description},
+                { acceptanceCriteriaPath, request.AcceptanceCriteria},
+                { dueDatePath,request.DueDate}
+            };
+
+            foreach (KeyValuePair<string, string> pair in pathsAndValues)
+            {
+                if (pair.Value != null)
+                {
+                    var pathOperation = new JsonPatchOperation()
+                    {
+                        Operation = Operation.Add,
+                        Path = pair.Key,
+                        Value = pair.Value,
+                    };
+
+                    patchDocument.Add(pathOperation);
+                }
+            }
+
+            if (request.RelatedTo != null && request.RelatedTo.Count > 0)
+            {
+                foreach (var relationWorkItemId in request.RelatedTo)
+                {
+                    var pathOperation = new JsonPatchOperation()
+                    {
+                        Operation = Operation.Add,
+                        Path = "/relations/-",
+                        Value = new Link()
+                        {
+                            Rel = FieldNames.SystemLinkTypesRelated,
+                            Url = $"https://dev.azure.com/{GetOrganizationName()}/{GetProjectName()}/_apis/wit/workItems/{relationWorkItemId}",
+                        },
+                    };
+
+                    patchDocument.Add(pathOperation);
+                }
+            }
+
+            if (request.ParentWorkItemId != 0)
+            {
+                var pathOperation = new JsonPatchOperation()
+                {
+                    Operation = Operation.Add,
+                    Path = "/relations/-",
+                    Value = new Link()
+                    {
+                        Rel = FieldNames.SystemLinkTypesHierarchyReverse,
+                        Url = $"https://dev.azure.com/{GetOrganizationName()}/{GetProjectName()}/_apis/wit/workItems/{request.ParentWorkItemId}",
+                    },
+                };
+
+                patchDocument.Add(pathOperation);
+            }
+
+            WorkItem updatedWorkItem = UpdateWorkItem(patchDocument, request.WorkItemId);
+            return updatedWorkItem;
         }
 
         public WorkItem UpdateTaskWorkItem(UpdateTaskRequest request)
@@ -170,7 +395,7 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
             else if (request.Tags != null && request.Tags.Count > 0)
                 tags = string.Join(";", request.Tags);
 
-            // To remove tags, the user needs to pass request.Steps as an empty collection.
+            // To remove steps, the user needs to pass request.Steps as an empty collection.
             if (request.Steps == null)
                 steps = null;
 

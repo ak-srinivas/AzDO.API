@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace AzDO.API.Tests.WorkItemTracking.WorkItems
 {
@@ -84,6 +85,130 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
             }
         }
 
+        [TestMethod]
+        public void UpdateTags()
+        {
+            string prepTag = "test case prep";
+            string execTag = "test case exec";
+
+            var ids = new List<int>()
+            {
+
+            };
+
+            foreach (var id in ids)
+            {
+                var updateWorkItem = new UpdateWorkItemRequest()
+                {
+                    WorkItemId = id,
+                    Tags = new List<string>()
+                    {
+                        execTag
+                    }
+                };
+
+                WorkItem updatedWorkItem = _workItemsCustomWrapper.UpdateWorkItem(updateWorkItem);
+                Assert.IsTrue(updatedWorkItem.Id.Equals(updateWorkItem.WorkItemId), $"Unable to update task work item with id '{updateWorkItem.WorkItemId}'.");
+            }
+
+        }
+
+        [TestMethod]
+        public void AddUserStoryToFeature()
+        {
+            var ignoreList = new List<int>()
+            {
+                768,
+                770,
+                774,
+                776,
+                778,
+                780,
+                782,
+                784,
+                786,
+                788,
+                790,
+                792,
+                794,
+                796,
+                798,
+                800,
+                802,
+                804,
+                806,
+                808,
+                810,
+                812,
+                814,
+                816,
+                818,
+                832,
+                834,
+                836,
+                838,
+                840,
+                842,
+                844,
+                846,
+                848,
+                850,
+                852,
+                856,
+                858,
+                860,
+                862,
+                864,
+                866,
+                868,
+                870,
+                872,
+                874,
+                876,
+                878,
+                880,
+                882,
+                885,
+                887,
+                889,
+                891,
+                893,
+                895,
+                897,
+                899,
+                901,
+                903,
+                931,
+                933,
+                935,
+                937,
+                939,
+
+
+            };
+
+            for (int startId = 767; startId <= 939; startId++)
+            {
+                if (startId == 771 || startId == 772 || startId == 853 || startId == 854 || startId == 883)
+                    continue;
+
+                if (ignoreList.Contains(startId))
+                    continue;
+                else
+                {
+                    var updateUserStoryRequest = new UpdateUserStoryRequest()
+                    {
+                        WorkItemId = startId,
+                        //AcceptanceCriteria = " ",
+                        AcceptanceCriteria = "<div><span style=\"display:inline !important;\"><b><u>Create below test cases:</u></b></span><ol style=\"box-sizing:border-box;padding-left:40px;clear:left;\"><li style=\"box-sizing:border-box;\">Test if code works with Terraform version 1.1.7 and AzureRM version<span style=\"box-sizing:border-box;\">&nbsp;3.9.0</span> </li><li style=\"box-sizing:border-box;\">Check if secrets are pulled from key vault </li><li style=\"box-sizing:border-box;\">Ensure modules run from pipeline are success </li><li style=\"box-sizing:border-box;\">Resource created in Azure portal should reflect all inputs the user provide in tfvars<ol style=\"box-sizing:border-box;padding-left:40px;clear:left;\"><li style=\"box-sizing:border-box;\">Test boolean values </li><li style=\"box-sizing:border-box;\">check for values from data blocks </li> </ol> </li><li style=\"box-sizing:border-box;\">Validate the Terraform state files in remote backend </li> </ol> </div>"
+                    };
+
+                    WorkItem updatedWorkItem = _workItemsCustomWrapper.UpdateUserStoryWorkItem(updateUserStoryRequest);
+                    Assert.IsTrue(updatedWorkItem.Id.Equals(updateUserStoryRequest.WorkItemId), $"Unable to update task work item with id '{updateUserStoryRequest.WorkItemId}'.");
+                }
+            }
+        }
+        
         [TestMethod]
         public void UpdateTestCaseWorkItem_1()
         {

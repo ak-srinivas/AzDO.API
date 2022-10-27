@@ -30,7 +30,7 @@ namespace AzDO.API.Tests
         public abstract class Emails
         {
             public const string Srinivas = "srinivas.akkapeddi@neudesic.com";
-            public const string EmaildName2 = "Emaild Id 2";
+            public const string Poojitha = "poojitha.kandati@neudesic.com";
         }
 
         // Email, VA Server Stage Name, VS Server Stage Name
