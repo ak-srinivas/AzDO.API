@@ -95,29 +95,15 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
         [TestMethod]
         public void CreateTestCaseWorkItems_With_Title()
         {
-            int userStoryId = 888; // User Story
+            int userStoryId = 914; // User Story
 
             List<string> titles = new List<string>()
             {
-                "Verify if the code is working on terraform version 1.1.7 and AzureRM version 3.9.0",
-                "Verify if the servername  in SQL Database server is unique and follow the coding standards",
-                "Verify if the server admin login should not contain SQL identifier and non alpha numeric chacters",
-                "Verify if the password created follow password standards",
-                "Verify if the firewall rules are enabled so that other Azure services and resources can access theSQL server",
-                "Verify if the microsoft defender for SQL is enabled or not",
-                "Verify if the password is stored in the keyvault and able to fetch the password from the keyvault",
-                "Verify if the Authentication method is configured with Azure AD in ploceus code",
-                "Verify if the firewall rule is created for accessing the SQL server",
-                "Verify if the user defined identity is present in the ploceus code and check whether the resources are able to connect with the ms sql server with the user defined identity",
-                "Verify if the SQL server shows the created SQL databases and SQL elastic pools",
-                "Verify if the minimum tls version is set",
-                "Verify if the mandatory dependent  modules are created for creating a SQL server",
-                "Verify if the public network access enable is enabled to true so that sql server can be accessed through internet",
-                "Verify if the outbound network traffic restriction is set to false and check there is no restriction of the network traffic",
-                "Verify if the public network access enable is enabled to false and ensure that SQL server cannot be accessed through internet",
-                "Verify if the outbound network traffic restriction is set to false and there is a restriction of the network traffic",
-                "Verify if the module run from the pipeline is success",
-                "Verify if the optional dependencies are present in the ploceus code"
+               "Verify that when configuration name value is changed a new resource gets created",
+"Verify that when server name is changed a new resource gets created",
+"Verify that when charset value is changed a new resource gets created",
+"Verify that timeouts (create/update/read/delete) can be set",
+
             };
 
             foreach (string title in titles)
@@ -126,7 +112,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                 {
                     WorkItemType = WorkItemTypeEnum.TestCase,
                     Title = title,
-                    AssignedTo = Emails.Poojitha,
+                    AssignedTo = Emails.Srinivas,
                     AreaPath = AREA,
                     IterationPath = ITERATION,
                 };

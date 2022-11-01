@@ -1,4 +1,5 @@
-﻿using AzDO.API.Wrappers.Work.Iterations;
+﻿using AzDO.API.Base.Common.Extensions;
+using AzDO.API.Wrappers.Work.Iterations;
 using AzDO.API.Wrappers.WorkItemTracking.Updates;
 using Microsoft.TeamFoundation.Core.WebApi.Types;
 using Microsoft.TeamFoundation.Work.WebApi;
@@ -39,7 +40,7 @@ namespace AzDO.API.Tests.WorkItemTracking.Updates
             HashSet<WorkItem> workItems = iterationsCustomWrapper.GetWorkItems_InIteration(iterationId);
             DataTable csvTable = updatesCustomWrapper.GetCycleTimeFromWorkItems(workItems);
 
-            ConvertTableToFile(csvTable, targetFilePath);
+            csvTable.ConvertTableToFile(targetFilePath);
             Assert.IsTrue(File.Exists(targetFilePath), $"Csv file with cycle time information releated to current sprint items was not exported.");
         }
 
@@ -97,7 +98,7 @@ namespace AzDO.API.Tests.WorkItemTracking.Updates
                     finalTable.AcceptChanges();
                 }
 
-                ConvertTableToFile(finalTable, targetFilePath);
+                finalTable.ConvertTableToFile(targetFilePath);
             }
         }
     }

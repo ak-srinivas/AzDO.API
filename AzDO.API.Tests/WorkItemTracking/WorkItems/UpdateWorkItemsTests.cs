@@ -1,4 +1,5 @@
 ﻿using AzDO.API.Base.Common;
+using AzDO.API.Base.Common.Extensions;
 using AzDO.API.Base.Common.Utilities;
 using AzDO.API.Base.CustomWrappers.WorkItemTracking.WorkItems;
 using AzDO.API.Tests.Work.Iterations;
@@ -10,6 +11,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Security.Cryptography;
 
@@ -30,26 +32,202 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
         }
 
         [TestMethod]
-        public void CreateAndUpdate_TaskWorkItem_ForAMN()
+        public void GetDuplicates()
+        {
+            var featureIds = new List<int>()
+            {
+                51,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                86,
+                87,
+                110,
+                111,
+                112,
+                113,
+                117,
+                119,
+                120,
+                121,
+                122,
+                124,
+                126,
+                129,
+                140,
+                142,
+                146,
+                191,
+                193,
+                196,
+                199,
+                201,
+                202,
+                205,
+                219,
+                269,
+                275,
+                330,
+                345,
+                379,
+                382,
+                456,
+                480,
+                481,
+                482,
+                574,
+                598,
+                615,
+                616,
+                757,
+                830,
+
+            };
+            var tables = new List<DataTable>();
+            var earlierTable = new DataTable();
+
+            foreach (int featureId in featureIds)
+            {
+                var csvTable = _workItemsCustomWrapper.GetDuplicates(featureId, earlierTable);
+                earlierTable.Merge(csvTable);
+            }
+
+            string targetFilePath = $@"D:\Files\Ploceus\Duplicate_WorkItems_All.csv";
+            earlierTable.ConvertTableToFile(targetFilePath);
+            Console.WriteLine();
+        }
+
+
+        [TestMethod]
+        public void CreateAndUpdate_TaskWorkItem()
         {
             WorkItemTypeEnum workItemType = WorkItemTypeEnum.Task;
 
             var tasksData = new List<(string, string, double)>()
             {
-                ( "QA Analysis","Requirements",2),
-                ( "QA Test Case Design","Testing",1),
-                ( "QA Test Case Execution","Testing",4),
-                ( "QA Demo Preparation","Testing",1),
+                ( "Create resource manually and analyze dependencies and requirements","Requirements",3),
+                ( "Create test cases to verify ploceus code for mandatory parameters and dependencies","Design",1),
+                ( "Analyze manual workflow for optional dependencies","Design",2),
+                ( "Create test cases and verify ploceus code for implementation of optional dependencies","Design",2),
             };
 
             var getIterationsTests = new GetIterationsTests();
             //SortedSet<int> parentIds = _iterationsCustomWrapper.GetQAWorkItemIds_In_CurrentIteration_FilterBy_EmailIds(new List<string>() { Emails.Srinivas });
 
             // Note: Change Iteration Path First
-            List<int> parentIds = new List<int>() { 164395, 159273 };
+            var parentIds = new List<int>() {
+                767,
+                769,
+                773,
+                775,
+                777,
+                779,
+                781,
+                783,
+                785,
+                787,
+                789,
+                791,
+                793,
+                795,
+                797,
+                799,
+                801,
+                803,
+                805,
+                807,
+                809,
+                811,
+                813,
+                815,
+                817,
+                831,
+                833,
+                835,
+                837,
+                839,
+                841,
+                843,
+                845,
+                847,
+                849,
+                851,
+                855,
+                857,
+                859,
+                861,
+                863,
+                865,
+                867,
+                869,
+                871,
+                873,
+                875,
+                877,
+                879,
+                881,
+                884,
+                886,
+                888,
+                890,
+                892,
+                894,
+                896,
+                898,
+                900,
+                902,
+                904,
+                906,
+                908,
+                910,
+                912,
+                914,
+                916,
+                918,
+                920,
+                922,
+                924,
+                926,
+                928,
+                930,
+                932,
+                934,
+                936,
+                938,
+            };
+
+            var ignoreList = new List<int>()
+            {
+                906,908, 914, 916, 922, 926,847,861
+            };
 
             for (int i = 0; i < parentIds.Count; i++)
             {
+                if (ignoreList.Contains(parentIds.ElementAt(i)))
+                    continue;
+
                 List<int> taskIds = new List<int>();
 
                 foreach ((string, string, double) taskData in tasksData)
@@ -68,7 +246,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                     var updateTaskRequest = new UpdateTaskRequest()
                     {
                         WorkItemId = (int)newTask.Id,
-                        AssignedTo = Emails.Srinivas,
+                        //AssignedTo = Emails.Anjani,
 
                         Priority = "2",
                         Activity = taskData.Item2,
@@ -208,7 +386,7 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                 }
             }
         }
-        
+
         [TestMethod]
         public void UpdateTestCaseWorkItem_1()
         {

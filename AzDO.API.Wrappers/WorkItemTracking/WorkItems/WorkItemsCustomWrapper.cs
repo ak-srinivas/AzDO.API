@@ -1,4 +1,5 @@
 ﻿using AzDO.API.Base.Common;
+using AzDO.API.Base.Common.Extensions;
 using AzDO.API.Base.Common.Utilities;
 using AzDO.API.Base.CustomWrappers.WorkItemTracking.WorkItems;
 using AzDO.API.Wrappers.WorkItemTracking.WorkItemTypesField;
@@ -8,6 +9,7 @@ using Microsoft.VisualStudio.Services.WebApi.Patch;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 
@@ -22,22 +24,65 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
             _workItemTypesFieldCustomWrapper = new WorkItemTypesFieldCustomWrapper();
         }
 
-        public List<int> GetFewUserStories(int parentWorkItemId, string filterWord = "Test Plan Execution")
+        public DataTable GetDuplicates(int parentWorkItemId, DataTable earlierTable)
         {
-            var ids = new List<int>();
+            var csvTable = new DataTable();
+
+            // Column Names
+            const string Id = "Id";
+            const string Type = "Type";
+            const string Title = "Title";
+            string Duplicate = "Duplicate";
+
+            List<string> csvHeaders = new List<string>()
+            {
+                Id,
+                Type,
+                Title,
+                Duplicate
+            };
+
+            var ignoreList = new List<string>()
+            {
+                "/attachments/",
+                "vstfs:///"
+            };
+
+            foreach (string header in csvHeaders)
+            {
+                csvTable.Columns.Add(header);
+            }
+
             var workItemResponse = GetWorkItem(parentWorkItemId);
             foreach (WorkItemRelation relations in workItemResponse.Relations)
             {
+                if (relations.Url.StartsWith("vstfs:///") || relations.Url.Contains("/attachments/"))
+                    continue;
+
                 int childWorkItemId = Convert.ToInt32(relations.Url.Split("/").Last());
                 var relationsWorkItem = GetWorkItem(childWorkItemId);
+                string type = relationsWorkItem.Fields[FieldNames.SystemWorkItemType].ToString().Trim();
                 string title = relationsWorkItem.Fields[FieldNames.SystemTitle].ToString().Trim();
-                if (title.Contains(filterWord))
+
+                bool status = csvTable.GetColumnFromDataTable<string>(Id).Contains(childWorkItemId.ToString()) || earlierTable.GetColumnFromDataTable<string>(Id).Contains(childWorkItemId.ToString());
+
+                if (csvTable.GetColumnFromDataTable<string>(Id).Contains(childWorkItemId.ToString()))
+                    continue;
+
+                DataRow newRow = csvTable.NewRow();
+                newRow[Id] = childWorkItemId;
+                newRow[Type] = type;
+                newRow[Title] = title;
+
+                if (csvTable.GetColumnFromDataTable<string>(Title).Contains(title) || earlierTable.GetColumnFromDataTable<string>(Title).Contains(title))
                 {
-                    ids.Add(childWorkItemId);
+                    newRow[Duplicate] = "Yes";
                 }
+
+                csvTable.Rows.Add(newRow);
             }
 
-            return ids;
+            return csvTable;
         }
 
         public void CreateQAUserStories(int parentWorkItemId)
@@ -94,7 +139,7 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                 WorkItem creationWIT = CreateWorkItem(creationRequest);
                 WorkItem executionWIT = CreateWorkItem(executionRequest);
 
-                var updateUSCreation= new UpdateUserStoryRequest()
+                var updateUSCreation = new UpdateUserStoryRequest()
                 {
                     Description = creationTitle,
                     DueDate = "2022-11-05T00:00:00Z",

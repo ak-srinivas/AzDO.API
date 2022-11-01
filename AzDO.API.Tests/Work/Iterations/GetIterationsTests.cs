@@ -1,4 +1,5 @@
-﻿using AzDO.API.Wrappers.Work.Iterations;
+﻿using AzDO.API.Base.Common.Extensions;
+using AzDO.API.Wrappers.Work.Iterations;
 using AzDO.API.Wrappers.WorkItemTracking.WorkItems;
 using Microsoft.TeamFoundation.Core.WebApi.Types;
 using Microsoft.TeamFoundation.Work.WebApi;
@@ -68,7 +69,7 @@ namespace AzDO.API.Tests.Work.Iterations
             Guid iterationId = teamSettingsIterations.Where(item => item.Name.Equals(iterationName)).Select(item => item.Id).FirstOrDefault();
 
             DataTable csvTable = _iterationsCustomWrapper.GetLinks_FromWorkItems_InIteration(iterationId);
-            ConvertTableToFile(csvTable, targetFilePath);
+            csvTable.ConvertTableToFile(targetFilePath);
             Assert.IsTrue(File.Exists(targetFilePath), $"Csv file with PR information releated to current sprint items was not exported.");
         }
 
@@ -76,7 +77,7 @@ namespace AzDO.API.Tests.Work.Iterations
         public void Get_My_WorkItems()
         {
             const string sprintNumber = "2021.<number>";
-            
+
             var tables = new List<DataTable>();
             string targetFilePath = $"D:\\MyWork\\MyWork_{TeamBoardName.Replace(" ", "_")}.csv";
 
@@ -103,7 +104,7 @@ namespace AzDO.API.Tests.Work.Iterations
                     finalTable.AcceptChanges();
                 }
 
-                ConvertTableToFile(finalTable, targetFilePath);
+                finalTable.ConvertTableToFile(targetFilePath);
             }
         }
     }

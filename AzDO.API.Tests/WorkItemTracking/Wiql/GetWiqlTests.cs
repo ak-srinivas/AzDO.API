@@ -1,4 +1,5 @@
-﻿using AzDO.API.Wrappers.WorkItemTracking.Wiql;
+﻿using AzDO.API.Base.Common.Extensions;
+using AzDO.API.Wrappers.WorkItemTracking.Wiql;
 using AzDO.API.Wrappers.WorkItemTracking.WorkItems;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi;
@@ -125,7 +126,7 @@ namespace AzDO.API.Tests.WorkItemTracking.Wiql
                     resultTable.Rows.Add(newRow);
                 }
 
-                ConvertTableToFile(resultTable, targetFilePath);
+                resultTable.ConvertTableToFile(targetFilePath);
                 string html = _wiqlCustomWrapper.GenerateHtmlFromTable(resultTable);
                 _wiqlCustomWrapper.SendEmail(html);
                 Console.WriteLine();
