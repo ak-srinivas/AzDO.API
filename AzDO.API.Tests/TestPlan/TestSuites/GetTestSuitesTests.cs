@@ -1,7 +1,13 @@
 ﻿using AzDO.API.Wrappers.TestPlan.TestSuites;
+using Microsoft.TeamFoundation.TestManagement.WebApi;
 using Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using SuiteExpand = Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi.SuiteExpand;
+using TestSuite = Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi.TestSuite;
 
 namespace AzDO.API.Tests.TestPlan.TestSuites
 {
@@ -30,9 +36,44 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
         [TestMethod]
         public void GetSuitesByTestCaseId()
         {
-            int testCaseId = 104940;
+            int testCaseId = 1005;
             List<TestSuite> testSuites = _testSuitesCustomWrapper.GetSuitesByTestCaseId(testCaseId);
             Assert.IsTrue(testSuites != null, $"Failed to get test suites by test case id.");
+        }
+
+        [TestMethod]
+        public void GetTestCaseSuiteHierarchy()
+        {
+            string project = ProjectNames.Ploceus;
+            int testPlanId = 53;
+            int testCaseId = 526;
+            string path = null;
+
+            List<TestSuite> testCaseSuites = _testSuitesCustomWrapper.GetSuitesByTestCaseId(testCaseId);
+            TestSuite testCaseSuite = testCaseSuites[0];
+            GetPath(project, testPlanId, testCaseSuite, ref path);
+            Console.WriteLine($"Path is: {path}");
+
+            Assert.IsTrue(testCaseSuites != null, $"Failed to get test suites by test case id.");
+        }
+
+        private string GetPath(string project, int testPlanId, TestSuite parentTestSuite, ref string path)
+        {
+            if (parentTestSuite.Id - 1 == testPlanId)
+            {
+                path = path + $" --> {parentTestSuite.Name}";
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(path))
+                path = $"{parentTestSuite.Name}";
+            else
+                path = path + $" --> {parentTestSuite.Name}";
+
+            parentTestSuite = _testSuitesCustomWrapper.GetTestSuiteByNameWithinTestPlan(project, testPlanId, parentTestSuite.ParentSuite.Name);
+
+            GetPath(project, testPlanId, parentTestSuite, ref path);
+            return path;
         }
 
         [TestMethod]

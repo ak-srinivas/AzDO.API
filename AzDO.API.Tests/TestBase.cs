@@ -30,9 +30,6 @@ namespace AzDO.API.Tests
         public abstract class Emails
         {
             public const string Srinivas = "srinivas.akkapeddi@neudesic.com";
-            public const string Poojitha = "poojitha.kandati@neudesic.com";
-            public const string Meenakshi = "meenakshi.rana@neudesic.com";
-            public const string Anjani = "anjani.burra@neudesic.com";
         }
 
         // Email, VA Server Stage Name, VS Server Stage Name
