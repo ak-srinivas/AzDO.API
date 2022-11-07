@@ -5,8 +5,6 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
 
 namespace AzDO.API.Tests.WorkItemTracking.WorkItems
 {
@@ -24,30 +22,8 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
         [TestMethod]
         public void GetWorkItem()
         {
-            var featureIds = new List<int>()
-            {
-                //57,
-                //58,
-                //59,
-                //60,
-                //61,
-                65
-            };
-
-            foreach (var featureId in featureIds)
-            {
-                _workItemsCustomWrapper.CreateQAUserStories(featureId);
-            }
-
-            Console.WriteLine();
-        }
-
-        [TestMethod]
-        public void GetWorkItem_1()
-        {
             int witId = 831;
             var workItemResponse = _workItemsCustomWrapper.GetWorkItem(witId);
-            //string ac = workItemResponse.Fields[FieldNames]
             Console.WriteLine();
         }
 

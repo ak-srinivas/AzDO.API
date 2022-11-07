@@ -6,6 +6,7 @@ using AzDO.API.Tests.Work.Iterations;
 using AzDO.API.Wrappers.Test.TestSuites;
 using AzDO.API.Wrappers.Work.Iterations;
 using AzDO.API.Wrappers.WorkItemTracking.WorkItems;
+using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.TeamFoundation.TestManagement.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,6 +31,37 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
             _testSuitesCustomWrapper = new TestSuitesCustomWrapper();
             _iterationsCustomWrapper = new IterationsCustomWrapper(TeamBoardName);
         }
+
+        [TestMethod]
+        public void CreateAndUpdateQAUserStories()
+        {
+            var creationWitIds = new List<int>();
+            var executionWitIds = new List<int>();
+
+            int qaFeatureWitId = 71;
+
+            var devFeatureIds = new List<int>()
+            {
+                1605
+            };
+
+            foreach (var devFeatureId in devFeatureIds)
+            {
+                _workItemsCustomWrapper.CreateQAUserStoriesForPloceus(devFeatureId, qaFeatureWitId, out int creationWitId, out int executionWitId);
+
+                if (creationWitId != 0)
+                    creationWitIds.Add(creationWitId);
+
+                if (executionWitId != 0)
+                    executionWitIds.Add(executionWitId);
+            }
+
+            string creationWitIdString = string.Join(", ", creationWitIds);
+            string executionWitIdString = string.Join(", ", executionWitIds);
+
+            Console.WriteLine();
+        }
+
 
         [TestMethod]
         public void GetDuplicates()
@@ -103,7 +135,6 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                 616,
                 757,
                 830,
-
             };
             var tables = new List<DataTable>();
             var earlierTable = new DataTable();
@@ -114,9 +145,18 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
                 earlierTable.Merge(csvTable);
             }
 
+            earlierTable = earlierTable.Select("Type='User Story'").CopyToDataTable();
+            try
+            {
+                earlierTable = earlierTable.Select("Duplicate='Yes'").CopyToDataTable();
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
             string targetFilePath = $@"D:\Files\Ploceus\Duplicate_WorkItems_All.csv";
             earlierTable.ConvertTableToFile(targetFilePath);
-            Console.WriteLine();
         }
 
 

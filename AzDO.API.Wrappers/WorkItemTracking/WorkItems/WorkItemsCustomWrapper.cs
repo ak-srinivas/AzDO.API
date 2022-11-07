@@ -19,6 +19,12 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
     {
         private readonly WorkItemTypesFieldCustomWrapper _workItemTypesFieldCustomWrapper;
 
+        private const string TestPlanCreation = "Test Plan Creation";
+        private const string TestPlanExecution = "Test Plan Execution";
+
+        private const string prepTag = "test case prep";
+        private const string execTag = "test case exec";
+
         public WorkItemsCustomWrapper()
         {
             _workItemTypesFieldCustomWrapper = new WorkItemTypesFieldCustomWrapper();
@@ -85,92 +91,178 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
             return csvTable;
         }
 
-        public void CreateQAUserStories(int parentWorkItemId)
+        private bool IsTestPlanCreationUserStoryExists(WorkItem userStoryWit)
         {
-            string prepTag = "test case prep";
-            string execTag = "test case exec";
-
-            var workItemResponse = GetWorkItem(parentWorkItemId);
-            foreach (WorkItemRelation relations in workItemResponse.Relations)
+            if (userStoryWit.Relations == null || userStoryWit.Relations.Count() == 0)
+                return false;
+            else
             {
-                int childWorkItemId = Convert.ToInt32(relations.Url.Split("/").Last());
-                if (childWorkItemId == 50 || childWorkItemId == parentWorkItemId)
+                foreach (WorkItemRelation witRelation in userStoryWit.Relations)
+                {
+                    if (witRelation.Url.StartsWith("vstfs:///"))
+                        continue;
+
+                    int witId = Convert.ToInt32(witRelation.Url.Split("/").Last());
+                    var workItem = GetWorkItem(witId);
+                    string workItemTitle = workItem.Fields[FieldNames.SystemTitle].ToString();
+
+                    if (workItemTitle.EndsWith(TestPlanCreation))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private bool IsTestPlanExecutionUserStoryExists(WorkItem userStoryWit)
+        {
+            if (userStoryWit.Relations == null || userStoryWit.Relations.Count() == 0)
+                return false;
+            else
+            {
+                foreach (WorkItemRelation witRelation in userStoryWit.Relations)
+                {
+                    if (witRelation.Url.StartsWith("vstfs:///"))
+                        continue;
+
+                    int witId = Convert.ToInt32(witRelation.Url.Split("/").Last());
+                    var workItem = GetWorkItem(witId);
+                    string workItemTitle = workItem.Fields[FieldNames.SystemTitle].ToString();
+
+                    if (workItemTitle.EndsWith(TestPlanExecution))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public void CreateQAUserStoriesForPloceus(int parentWitId, int qaFeatureWitId, out int creationWitId, out int executionWitId, string dueDate = "2022-11-30T00:00:00Z")
+        {
+            creationWitId = 0;
+            executionWitId = 0;
+
+            var workItemResponse = GetWorkItem(parentWitId);
+            if (workItemResponse.Relations == null || workItemResponse.Relations.Count() == 0)
+                return;
+
+            List<string> relationsUrls = workItemResponse.Relations.Select(item => item.Url).ToList();
+            List<int> devUserStoryWitIds = relationsUrls.Select(urls => Convert.ToInt32(urls.Split("/").Last())).ToList();
+            devUserStoryWitIds.Sort();
+
+            foreach (int devUserStoryWitId in devUserStoryWitIds)
+            {
+                if (devUserStoryWitId == parentWitId)
                     continue;
 
-                var relationsWorkItem = GetWorkItem(childWorkItemId);
-                string title = relationsWorkItem.Fields[FieldNames.SystemTitle].ToString().Trim();
-                string keyword = "";
+                var devUserStoryWit = GetWorkItem(devUserStoryWitId);
+                if (!devUserStoryWit.Fields[FieldNames.SystemWorkItemType].Equals("User Story"))
+                    continue;
 
-                if (title.Contains(" "))
-                    keyword = title.Split(" ")[1].Trim().Replace("v3.9.0", string.Empty).Replace("_v3.9.0.", string.Empty).Replace(":", string.Empty);
-                else
-                    keyword = title.Trim().Replace("v3.9.0", string.Empty).Replace("_v3.9.0.", string.Empty).Replace(":", string.Empty);
+                //if (devUserStoryWitId == 1606)
+                //{
+                //    Console.WriteLine();
+                //}
+                //else
+                //    continue;
 
-                string creationTitle = $"{keyword} Test Plan Creation";
-                string executionTitle = $"{keyword} Test Plan Execution";
+                WorkItem creationWIT = null;
+                WorkItem executionWIT = null;
 
-                var creationRequest = new CreateWorkItemRequest()
+                string title = devUserStoryWit.Fields[FieldNames.SystemTitle].ToString().Trim();
+                string newTitle = title.Replace("v3.9.0", string.Empty).Replace("_v3.9.0.", string.Empty);
+
+                newTitle = newTitle.Replace(":", string.Empty).Replace("v1.1.0", string.Empty).Trim();
+                newTitle = newTitle.Replace("v.1.1.0", string.Empty).Trim();
+                newTitle = newTitle.Replace("V.1.1.0", string.Empty).Trim();
+
+                if (newTitle.StartsWith("Create "))
+                    newTitle = newTitle.Replace("Create ", string.Empty);
+                else if (newTitle.StartsWith("create "))
+                    newTitle = newTitle.Replace("create ", string.Empty);
+
+                if (!IsTestPlanCreationUserStoryExists(devUserStoryWit))
                 {
-                    WorkItemType = WorkItemTypeEnum.UserStory,
-                    Title = creationTitle,
-                    AreaPath = "Ploceus",
-                    IterationPath = "Ploceus",
-
-                    Tags = new List<string>()
+                    string creationTitle = $"{newTitle} {TestPlanCreation}";
+                    var creationRequest = new CreateUserStoryRequest()
                     {
-                        prepTag
-                    }
-                };
+                        WorkItemType = WorkItemTypeEnum.UserStory,
+                        Title = creationTitle,
+                        AreaPath = "Ploceus",
+                        IterationPath = "Ploceus",
+                        DueDate = dueDate,
 
-                var executionRequest = new CreateWorkItemRequest()
-                {
-                    WorkItemType = WorkItemTypeEnum.UserStory,
-                    Title = executionTitle,
+                        Tags = new List<string>()
+                        {
+                            prepTag
+                        }
+                    };
 
-                    AreaPath = "Ploceus",
-                    IterationPath = "Ploceus",
+                    creationWIT = CreateUserStoryWorkItem(creationRequest);
+                    creationWitId = (int)creationWIT.Id;
 
-                    Tags = new List<string>()
+                    var updateUSCreation = new UpdateUserStoryRequest()
                     {
-                        execTag
-                    }
-                };
+                        Description = creationTitle,
+                        WorkItemId = (int)creationWIT.Id,
+                        ParentWorkItemId = qaFeatureWitId // QA Activities
+                    };
+                    WorkItem updateCreationWIT_Update = UpdateUserStoryWorkItem(updateUSCreation);
+                }
 
-                WorkItem creationWIT = CreateWorkItem(creationRequest);
-                WorkItem executionWIT = CreateWorkItem(executionRequest);
-
-                var updateUSCreation = new UpdateUserStoryRequest()
+                if (!IsTestPlanExecutionUserStoryExists(devUserStoryWit))
                 {
-                    Description = creationTitle,
-                    DueDate = "2022-11-05T00:00:00Z",
-                    WorkItemId = (int)creationWIT.Id,
-                    ParentWorkItemId = 830 // QA Activities
-                };
-
-                var updateUSExecution = new UpdateUserStoryRequest()
-                {
-                    Description = executionTitle,
-                    DueDate = "2022-11-05T00:00:00Z",
-                    WorkItemId = (int)executionWIT.Id,
-                    ParentWorkItemId = 830 // QA Activities
-                };
-
-                var updateUserStoryWorkItem = new UpdateUserStoryRequest()
-                {
-                    WorkItemId = childWorkItemId,
-
-                    RelatedTo = new List<int>()
+                    string executionTitle = $"{newTitle} {TestPlanExecution}";
+                    var executionRequest = new CreateUserStoryRequest()
                     {
-                        (int)creationWIT.Id,
-                        (int)executionWIT.Id
-                    }
-                };
+                        WorkItemType = WorkItemTypeEnum.UserStory,
+                        Title = executionTitle,
+                        AreaPath = "Ploceus",
+                        IterationPath = "Ploceus",
+                        DueDate = dueDate,
 
-                WorkItem updateCreationWIT_Update = UpdateUserStoryWorkItem(updateUSCreation);
-                WorkItem updateExecutionWIT_Update = UpdateUserStoryWorkItem(updateUSExecution);
-                WorkItem updatedWorkItem = UpdateUserStoryWorkItem(updateUserStoryWorkItem);
+                        Tags = new List<string>()
+                        {
+                            execTag
+                        }
+                    };
+                    executionWIT = CreateUserStoryWorkItem(executionRequest);
+                    executionWitId = (int)executionWIT.Id;
+
+                    var updateUSExecution = new UpdateUserStoryRequest()
+                    {
+                        Description = executionTitle,
+                        WorkItemId = (int)executionWIT.Id,
+                        ParentWorkItemId = qaFeatureWitId // QA Activities
+                    };
+                    WorkItem updateExecutionWIT_Update = UpdateUserStoryWorkItem(updateUSExecution);
+                }
+
+                if (creationWIT != null)
+                {
+                    var updateUserStoryWorkItem = new UpdateUserStoryRequest()
+                    {
+                        WorkItemId = devUserStoryWitId,
+
+                        RelatedTo = new List<int>()
+                        {
+                            (int)creationWIT.Id,
+                        }
+                    };
+                    WorkItem updatedWorkItem = UpdateUserStoryWorkItem(updateUserStoryWorkItem);
+                }
+                if (executionWIT != null)
+                {
+                    var updateUserStoryWorkItem = new UpdateUserStoryRequest()
+                    {
+                        WorkItemId = devUserStoryWitId,
+
+                        RelatedTo = new List<int>()
+                        {
+                            (int)executionWIT.Id,
+                        }
+                    };
+                    WorkItem updatedWorkItem = UpdateUserStoryWorkItem(updateUserStoryWorkItem);
+                }
             }
-            Console.WriteLine();
         }
 
         public WorkItem AddUserStoryToFeature(UpdateWorkItemRequest request)
@@ -246,6 +338,58 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
 
             WorkItem createdWorkItem = CreateWorkItem(patchDocument, request.WorkItemType);
             return createdWorkItem;
+        }
+
+        public WorkItem CreateUserStoryWorkItem(CreateUserStoryRequest request)
+        {
+            string tagValue = null;
+            JsonPatchDocument patchDocument = new JsonPatchDocument();
+            Dictionary<string, string> referenceNames = _workItemTypesFieldCustomWrapper.GetFieldsNameWithReferenceNames(request.WorkItemType);
+
+            if (string.IsNullOrEmpty(request.AssignedTo))
+            {
+                // If AssignedTo is null or empty then assign empty string otherwise
+                request.AssignedTo = null;
+            }
+
+            // If tagValue is null or empty then assign empty string otherwise do nothing.
+            if (request.Tags != null && request.Tags.Count > 0)
+                tagValue = string.Join(",", request.Tags);
+
+            string titlePath = referenceNames["Title"];
+            string areaPath = referenceNames["Area Path"];
+            string iterationPath = referenceNames["Iteration Path"];
+            string tagPath = referenceNames["Tags"];
+            string assignedToPath = referenceNames["Assigned To"];
+            string dueDatePath = referenceNames["Due Date"];
+
+            var pathsAndValues = new Dictionary<string, string>
+            {
+                { titlePath, request.Title },
+                { areaPath, request.AreaPath },
+                { iterationPath, request.IterationPath },
+                { tagPath, tagValue },
+                { assignedToPath, request.AssignedTo },
+                { dueDatePath, request.DueDate },
+            };
+
+            foreach (KeyValuePair<string, string> pair in pathsAndValues)
+            {
+                if (pair.Value != null)
+                {
+                    var pathOperation = new JsonPatchOperation()
+                    {
+                        Operation = Operation.Add,
+                        Path = pair.Key,
+                        Value = pair.Value,
+                    };
+
+                    patchDocument.Add(pathOperation);
+                }
+            }
+
+            WorkItem createdUserStoryWit = CreateWorkItem(patchDocument, request.WorkItemType);
+            return createdUserStoryWit;
         }
 
         public WorkItem UpdateUserStoryWorkItem(UpdateUserStoryRequest request)

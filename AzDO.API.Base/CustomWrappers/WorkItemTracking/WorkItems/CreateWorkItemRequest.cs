@@ -1,4 +1,5 @@
 ﻿using AzDO.API.Base.Common;
+using Microsoft.VisualBasic;
 using System.Collections.Generic;
 
 namespace AzDO.API.Base.CustomWrappers.WorkItemTracking.WorkItems
@@ -17,5 +18,10 @@ namespace AzDO.API.Base.CustomWrappers.WorkItemTracking.WorkItems
             Tags = new List<string>();
             AssignedTo = "";
         }
+    }
+
+    public class CreateUserStoryRequest : CreateWorkItemRequest
+    {
+        public string DueDate { get; set; }
     }
 }
