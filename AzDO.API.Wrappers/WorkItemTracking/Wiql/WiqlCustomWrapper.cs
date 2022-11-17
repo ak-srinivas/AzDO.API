@@ -1,4 +1,6 @@
 ﻿using AzDO.API.Base.Common.Utilities;
+using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using Microsoft.VisualStudio.Services.WebApi;
 using System;
 using System.Data;
 using System.Net;
@@ -8,6 +10,24 @@ namespace AzDO.API.Wrappers.WorkItemTracking.Wiql
 {
     public sealed class WiqlCustomWrapper : WiqlWrapper
     {
+        /// <summary>
+        /// Finds the test suite by it's name and returns the TestSuite object
+        /// </summary>
+        //public TestSuite GetWiqlQueryResults(string project, int planId, string testSuiteName)
+        //{
+        //    string continuationToken = null;
+        //    TestSuite testSuite = null;
+
+        //    do
+        //    {
+        //        PagedList<TestSuite> testSuites = QueryByWiql(Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.Wiql wiql, bool ? timePrecision = null, int ? top = null)
+        //        continuationToken = testSuites.ContinuationToken;
+        //        testSuite = testSuites.Where(item => item.Name.Equals(testSuiteName)).Select(item => item).FirstOrDefault();
+        //    } while (testSuite == null && continuationToken != null);
+
+        //    return testSuite;
+        //}
+
         public string GenerateHtmlFromTable(DataTable table)
         {
             return Helpers.GenerateHtmlFromTable(table);

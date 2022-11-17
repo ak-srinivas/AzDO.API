@@ -80,12 +80,14 @@ namespace AzDO.API.Tests.TestPlan.TestSuites
         public void GetTestSuitesForPlan()
         {
             string project = ProjectNames.Ploceus;
-            int planId = 121077;
+            int planId = 53;
             SuiteExpand expand = SuiteExpand.Children;
             string continuationToken = null;
             bool? asTreeView = null;
 
             List<TestSuite> testSuites = _testSuitesCustomWrapper.GetTestSuitesForPlan(project, planId, expand, continuationToken, asTreeView);
+
+
             Assert.IsTrue(testSuites != null, $"Failed to get test suites for test plan id '{planId}'.");
         }
 

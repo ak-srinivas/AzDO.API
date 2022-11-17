@@ -5,9 +5,11 @@ using AzDO.API.Base.CustomWrappers.WorkItemTracking.WorkItems;
 using AzDO.API.Tests.Work.Iterations;
 using AzDO.API.Wrappers.Test.TestSuites;
 using AzDO.API.Wrappers.Work.Iterations;
+using AzDO.API.Wrappers.WorkItemTracking.Wiql;
 using AzDO.API.Wrappers.WorkItemTracking.WorkItems;
 using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.TeamFoundation.TestManagement.WebApi;
+using Microsoft.TeamFoundation.Wiki.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -24,44 +26,61 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
         private readonly WorkItemsCustomWrapper _workItemsCustomWrapper;
         private readonly TestSuitesCustomWrapper _testSuitesCustomWrapper;
         private readonly IterationsCustomWrapper _iterationsCustomWrapper;
+        private readonly WiqlCustomWrapper _wiqlCustomWrapper;
 
         public UpdateWorkItemsTests()
         {
             _workItemsCustomWrapper = new WorkItemsCustomWrapper();
             _testSuitesCustomWrapper = new TestSuitesCustomWrapper();
+            _wiqlCustomWrapper = new WiqlCustomWrapper();
             _iterationsCustomWrapper = new IterationsCustomWrapper(TeamBoardName);
         }
 
         [TestMethod]
         public void CreateAndUpdateQAUserStories()
         {
-            var creationWitIds = new List<int>();
-            var executionWitIds = new List<int>();
-
             int qaFeatureWitId = 71;
 
             var devFeatureIds = new List<int>()
             {
-                1605
+                330,345,75,205,615,1605,1829
             };
 
             foreach (var devFeatureId in devFeatureIds)
             {
-                _workItemsCustomWrapper.CreateQAUserStoriesForPloceus(devFeatureId, qaFeatureWitId, out int creationWitId, out int executionWitId);
-
-                if (creationWitId != 0)
-                    creationWitIds.Add(creationWitId);
-
-                if (executionWitId != 0)
-                    executionWitIds.Add(executionWitId);
+                _workItemsCustomWrapper.CreateQAUserStoriesForPloceus(devFeatureId, qaFeatureWitId);
             }
-
-            string creationWitIdString = string.Join(", ", creationWitIds);
-            string executionWitIdString = string.Join(", ", executionWitIds);
 
             Console.WriteLine();
         }
 
+        [TestMethod]
+        public void QueryByWiql_And_Update_Title_For_User_Stories()
+        {
+            var wiql = new Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.Wiql();
+            string tag = "test case exec";
+            wiql.Query = wiql.Query = $"Select [Id], [Title], [State] From WorkItems Where [Work Item Type] = 'User Story' And [Tags] contains '{tag}'";
+            bool? timePrecision = null;
+            int? top = 10000;
+
+            WorkItemQueryResult workItemQueryResult = _wiqlCustomWrapper.QueryByWiql(wiql, timePrecision, top);
+            Assert.IsTrue(workItemQueryResult != null, $"Unable to fetch query by work item query language.");
+            var workItemTitles = new List<string>();
+            var witsWithoutTag = new List<int>();
+            var witsWithoutProperTitle = new List<int>();
+            var witWithoutLinks = new List<int>();
+
+            Dictionary<string, string> oldAndNewTitles = new Dictionary<string, string> { };
+
+            foreach (var workItem in workItemQueryResult.WorkItems)
+            {
+                //_workItemsCustomWrapper.GetWorkItemTitles(workItem.Id, "Test Case Execution", tag, ref workItemTitles, ref witsWithoutTag, ref witsWithoutProperTitle);
+                _workItemsCustomWrapper.GetWorkItemLinks(workItem.Id, ref witWithoutLinks);
+                //_workItemsCustomWrapper.UpdateWorkItemTitles(workItem.Id, oldAndNewTitles);
+            }
+
+            Console.WriteLine();
+        }
 
         [TestMethod]
         public void GetDuplicates()

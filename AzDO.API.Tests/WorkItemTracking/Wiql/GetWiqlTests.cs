@@ -149,9 +149,10 @@ namespace AzDO.API.Tests.WorkItemTracking.Wiql
         [TestMethod]
         public void QueryByWiql()
         {
-            Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.Wiql wiql = new Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.Wiql();
+            var wiql = new Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.Wiql();
+            wiql.Query = "Select [Id], [Title], [State] From WorkItems Where [Work Item Type] = 'User Story' And [Tags] contains 'test case prep";
             bool? timePrecision = null;
-            int? top = null;
+            int? top = 10000;
 
             WorkItemQueryResult workItemQueryResult = _wiqlCustomWrapper.QueryByWiql(wiql, timePrecision, top);
             Assert.IsTrue(workItemQueryResult != null, $"Unable to fetch query by work item query language.");

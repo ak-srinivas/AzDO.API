@@ -1,6 +1,8 @@
 ﻿using AzDO.API.Wrappers.TestPlan.TestSuiteEntry;
+using AzDO.API.Wrappers.TestPlan.TestSuites;
 using Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 
 namespace AzDO.API.Tests.TestPlan.TestSuiteEntry
@@ -9,10 +11,37 @@ namespace AzDO.API.Tests.TestPlan.TestSuiteEntry
     public class UpdateTestSuiteEntryTests : TestBase
     {
         private readonly TestSuiteEntryCustomWrapper _testSuiteEntryCustomWrapper;
+        private readonly TestSuitesCustomWrapper _testSuitesCustomWrapper;
 
         public UpdateTestSuiteEntryTests()
         {
             _testSuiteEntryCustomWrapper = new TestSuiteEntryCustomWrapper();
+            _testSuitesCustomWrapper = new TestSuitesCustomWrapper();
+        }
+
+        [TestMethod]
+        public void ReorderTestSuites()
+        {
+            int planId = 53;
+            int suiteId = 289;
+            int sequenceCount = 1;
+            var suiteEntries = new List<SuiteEntryUpdateParams>();
+
+            List<TestSuite> testSuites = _testSuitesCustomWrapper.GetTestSuitesWithinTestSuite(planId, suiteId);
+
+            foreach (var testSuite in testSuites)
+            {
+                SuiteEntryUpdateParams updateParams = new SuiteEntryUpdateParams
+                {
+                    Id = testSuite.Id,
+                    SuiteEntryType = SuiteEntryTypes.Suite,
+                    SequenceNumber = sequenceCount++
+                };
+                suiteEntries.Add(updateParams);
+            }
+
+            List<SuiteEntry> orderedList = _testSuiteEntryCustomWrapper.ReorderSuiteEntries(suiteEntries, suiteId);
+            Assert.IsTrue(testSuites != null, $"Failed to reorder test cases in test suite.");
         }
 
         [TestMethod, Ignore]

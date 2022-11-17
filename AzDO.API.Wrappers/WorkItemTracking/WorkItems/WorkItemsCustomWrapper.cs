@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -19,8 +20,8 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
     {
         private readonly WorkItemTypesFieldCustomWrapper _workItemTypesFieldCustomWrapper;
 
-        private const string TestPlanCreation = "Test Plan Creation";
-        private const string TestPlanExecution = "Test Plan Execution";
+        private const string TestCaseCreation = "Test Case Creation";
+        private const string TestCaseExecution = "Test Case Execution";
 
         private const string prepTag = "test case prep";
         private const string execTag = "test case exec";
@@ -99,6 +100,9 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
             {
                 foreach (WorkItemRelation witRelation in userStoryWit.Relations)
                 {
+                    if (witRelation.Url.Contains("/attachments/"))
+                        continue;
+
                     if (witRelation.Url.StartsWith("vstfs:///"))
                         continue;
 
@@ -106,7 +110,7 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                     var workItem = GetWorkItem(witId);
                     string workItemTitle = workItem.Fields[FieldNames.SystemTitle].ToString();
 
-                    if (workItemTitle.EndsWith(TestPlanCreation))
+                    if (workItemTitle.EndsWith(TestCaseCreation))
                         return true;
                 }
             }
@@ -121,6 +125,9 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
             {
                 foreach (WorkItemRelation witRelation in userStoryWit.Relations)
                 {
+                    if (witRelation.Url.Contains("/attachments/"))
+                        continue;
+
                     if (witRelation.Url.StartsWith("vstfs:///"))
                         continue;
 
@@ -128,23 +135,74 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                     var workItem = GetWorkItem(witId);
                     string workItemTitle = workItem.Fields[FieldNames.SystemTitle].ToString();
 
-                    if (workItemTitle.EndsWith(TestPlanExecution))
+                    if (workItemTitle.EndsWith(TestCaseExecution))
                         return true;
                 }
             }
             return false;
         }
 
-        public void CreateQAUserStoriesForPloceus(int parentWitId, int qaFeatureWitId, out int creationWitId, out int executionWitId, string dueDate = "2022-11-30T00:00:00Z")
+        public void UpdateWorkItemTitles(int witId, Dictionary<string, string> oldAndNewTitles)
         {
-            creationWitId = 0;
-            executionWitId = 0;
+            var workItemResponse = GetWorkItem(witId);
+            string oldTitle = workItemResponse.Fields[FieldNames.SystemTitle].ToString();
+            if (oldAndNewTitles.ContainsKey(oldTitle))
+            {
+                string newTitle = oldAndNewTitles[oldTitle];
+                var updateUserStoryRequest = new UpdateUserStoryRequest()
+                {
+                    WorkItemId = witId,
+                    Title = newTitle,
+                };
+                WorkItem updateResponse = UpdateUserStoryWorkItem(updateUserStoryRequest);
+                Console.WriteLine();
+            }
+        }
 
+        public void GetWorkItemLinks(int witId, ref List<int> witWithoutLinks)
+        {
+            WorkItem workItem = GetWorkItem(witId);
+            if (workItem.Relations == null || workItem.Relations.Count == 0)
+            {
+                witWithoutLinks.Add(witId);
+                return;
+            }
+
+        }
+
+        public void GetWorkItemTitles(int witId, string filterWord, string tag, ref List<string> workItemTitles, ref List<int> witsWithoutTag, ref List<int> witsWithoutProperTitle)
+        {
+            var workItemResponse = GetWorkItem(witId);
+            string title = workItemResponse.Fields[FieldNames.SystemTitle].ToString();
+            string titleAsLower = workItemResponse.Fields[FieldNames.SystemTitle].ToString().ToLower();
+
+            if (!workItemResponse.Fields.ContainsKey("System.Tags"))
+            {
+                witsWithoutTag.Add(witId);
+                return;
+            }
+            if (!workItemResponse.Fields["System.Tags"].ToString().Equals(tag))
+                return;
+
+            if (!title.EndsWith(filterWord, false, CultureInfo.InvariantCulture))
+            {
+                witsWithoutProperTitle.Add(witId);
+                return;
+            }
+
+            if (titleAsLower.Contains(filterWord.ToLower()))
+                workItemTitles.Add(workItemResponse.Fields[FieldNames.SystemTitle].ToString());
+        }
+
+        public void CreateQAUserStoriesForPloceus(int parentWitId, int qaFeatureWitId, string dueDate = "2022-11-30T00:00:00Z")
+        {
             var workItemResponse = GetWorkItem(parentWitId);
             if (workItemResponse.Relations == null || workItemResponse.Relations.Count() == 0)
                 return;
 
             List<string> relationsUrls = workItemResponse.Relations.Select(item => item.Url).ToList();
+            relationsUrls.RemoveAll(item => item.StartsWith("vstfs:///"));
+
             List<int> devUserStoryWitIds = relationsUrls.Select(urls => Convert.ToInt32(urls.Split("/").Last())).ToList();
             devUserStoryWitIds.Sort();
 
@@ -157,31 +215,37 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                 if (!devUserStoryWit.Fields[FieldNames.SystemWorkItemType].Equals("User Story"))
                     continue;
 
-                //if (devUserStoryWitId == 1606)
-                //{
-                //    Console.WriteLine();
-                //}
-                //else
-                //    continue;
-
                 WorkItem creationWIT = null;
                 WorkItem executionWIT = null;
 
+                CultureInfo culterInfo = CultureInfo.InvariantCulture;
+
                 string title = devUserStoryWit.Fields[FieldNames.SystemTitle].ToString().Trim();
-                string newTitle = title.Replace("v3.9.0", string.Empty).Replace("_v3.9.0.", string.Empty);
+                string newTitle = title.Replace("v.3.9.0.", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("_v.3.9.0.", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("v3.9.0.", string.Empty, true, culterInfo);
 
-                newTitle = newTitle.Replace(":", string.Empty).Replace("v1.1.0", string.Empty).Trim();
-                newTitle = newTitle.Replace("v.1.1.0", string.Empty).Trim();
-                newTitle = newTitle.Replace("V.1.1.0", string.Empty).Trim();
+                newTitle = newTitle.Replace("_v.3.9.0.", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("_v3.9.0.", string.Empty, true, culterInfo);
 
-                if (newTitle.StartsWith("Create "))
-                    newTitle = newTitle.Replace("Create ", string.Empty);
-                else if (newTitle.StartsWith("create "))
-                    newTitle = newTitle.Replace("create ", string.Empty);
+                newTitle = newTitle.Replace("v3.9.0", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("v.3.9.0", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("3.9.0.", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("3.9.0", string.Empty, true, culterInfo);
+
+                newTitle = newTitle.Replace(":", string.Empty);
+                newTitle = newTitle.Replace("v1.1.0", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("v.1.1.0", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("v.1.1.0.", string.Empty, true, culterInfo);
+                newTitle = newTitle.Replace("using AzureRM version", string.Empty, true, culterInfo);
+                newTitle = newTitle.Trim();
+
+                if (newTitle.StartsWith("Create ", false, CultureInfo.InvariantCulture))
+                    newTitle = newTitle.Replace("Create ", string.Empty, true, CultureInfo.InvariantCulture);
 
                 if (!IsTestPlanCreationUserStoryExists(devUserStoryWit))
                 {
-                    string creationTitle = $"{newTitle} {TestPlanCreation}";
+                    string creationTitle = $"{newTitle} {TestCaseCreation}";
                     var creationRequest = new CreateUserStoryRequest()
                     {
                         WorkItemType = WorkItemTypeEnum.UserStory,
@@ -197,7 +261,6 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                     };
 
                     creationWIT = CreateUserStoryWorkItem(creationRequest);
-                    creationWitId = (int)creationWIT.Id;
 
                     var updateUSCreation = new UpdateUserStoryRequest()
                     {
@@ -210,7 +273,7 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
 
                 if (!IsTestPlanExecutionUserStoryExists(devUserStoryWit))
                 {
-                    string executionTitle = $"{newTitle} {TestPlanExecution}";
+                    string executionTitle = $"{newTitle} {TestCaseExecution}";
                     var executionRequest = new CreateUserStoryRequest()
                     {
                         WorkItemType = WorkItemTypeEnum.UserStory,
@@ -225,7 +288,6 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                         }
                     };
                     executionWIT = CreateUserStoryWorkItem(executionRequest);
-                    executionWitId = (int)executionWIT.Id;
 
                     var updateUSExecution = new UpdateUserStoryRequest()
                     {
