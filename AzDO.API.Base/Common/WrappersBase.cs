@@ -113,12 +113,14 @@ namespace AzDO.API.Base.Common
             public const string SystemState = "System.State";
             public const string SystemWorkItemType = "System.WorkItemType";
             public const string SystemBoardColumn = "System.BoardColumn";
+            public const string SystemTags = "System.Tags";
 
             public const string SystemLinkTypesHierarchyReverse = "System.LinkTypes.Hierarchy-Reverse";
             public const string SystemLinkTypesHierarchyForward = "System.LinkTypes.Hierarchy-Forward";
             public const string SystemLinkTypesRelated = "System.LinkTypes.Related";
 
             public const string SystemAssignedTo = "System.AssignedTo";
+            public const string CustomQAReviewer = "Custom.QAReviewer";
 
             public const string MicrosoftVSTSCommonPriority = "Microsoft.VSTS.Common.Priority";
             public const string MicrosoftVSTSSchedulingStoryPoints = "Microsoft.VSTS.Scheduling.StoryPoints";

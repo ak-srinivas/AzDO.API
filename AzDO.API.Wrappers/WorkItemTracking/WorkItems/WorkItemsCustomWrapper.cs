@@ -3,6 +3,7 @@ using AzDO.API.Base.Common.Extensions;
 using AzDO.API.Base.Common.Utilities;
 using AzDO.API.Base.CustomWrappers.WorkItemTracking.WorkItems;
 using AzDO.API.Wrappers.WorkItemTracking.WorkItemTypesField;
+using Microsoft.TeamFoundation.Wiki.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.WebApi.Patch;
@@ -92,8 +93,11 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
             return csvTable;
         }
 
-        private bool IsTestPlanCreationUserStoryExists(WorkItem userStoryWit)
+        private bool IsTestCaseCreationUserStoryExists(WorkItem userStoryWit, out int witId, out bool missingTag)
         {
+            witId = 0;
+            missingTag = false;
+
             if (userStoryWit.Relations == null || userStoryWit.Relations.Count() == 0)
                 return false;
             else
@@ -106,19 +110,33 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                     if (witRelation.Url.StartsWith("vstfs:///"))
                         continue;
 
-                    int witId = Convert.ToInt32(witRelation.Url.Split("/").Last());
+                    witId = Convert.ToInt32(witRelation.Url.Split("/").Last());
                     var workItem = GetWorkItem(witId);
-                    string workItemTitle = workItem.Fields[FieldNames.SystemTitle].ToString();
+                    if (workItem.Fields[FieldNames.SystemWorkItemType].Equals("User Story"))
+                    {
+                        string workItemTitle = workItem.Fields[FieldNames.SystemTitle].ToString();
 
-                    if (workItemTitle.EndsWith(TestCaseCreation))
-                        return true;
+                        if (workItemTitle.EndsWith(TestCaseCreation, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (workItem.Fields.ContainsKey(FieldNames.SystemTags))
+                                return true;
+                            else
+                            {
+                                missingTag = true;
+                                return true;
+                            }
+                        }
+                    }
                 }
             }
             return false;
         }
 
-        private bool IsTestPlanExecutionUserStoryExists(WorkItem userStoryWit)
+        private bool IsTestCaseExecutionUserStoryExists(WorkItem userStoryWit, out int witId, out bool missingTag)
         {
+            witId = 0;
+            missingTag = false;
+
             if (userStoryWit.Relations == null || userStoryWit.Relations.Count() == 0)
                 return false;
             else
@@ -131,15 +149,81 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                     if (witRelation.Url.StartsWith("vstfs:///"))
                         continue;
 
-                    int witId = Convert.ToInt32(witRelation.Url.Split("/").Last());
+                    witId = Convert.ToInt32(witRelation.Url.Split("/").Last());
                     var workItem = GetWorkItem(witId);
-                    string workItemTitle = workItem.Fields[FieldNames.SystemTitle].ToString();
+                    if (workItem.Fields[FieldNames.SystemWorkItemType].Equals("User Story"))
+                    {
+                        string workItemTitle = workItem.Fields[FieldNames.SystemTitle].ToString();
 
-                    if (workItemTitle.EndsWith(TestCaseExecution))
-                        return true;
+                        if (workItemTitle.EndsWith(TestCaseExecution, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (workItem.Fields.ContainsKey(FieldNames.SystemTags))
+                                return true;
+                            else
+                            {
+                                missingTag = true;
+                                return true;
+                            }
+                        }
+                    }
                 }
             }
             return false;
+        }
+
+        private string GetAssignedTo(int witId)
+        {
+            var workItemResponse = GetWorkItem(witId);
+            if (workItemResponse.Fields.ContainsKey(FieldNames.SystemAssignedTo))
+            {
+                IdentityRef identity = (IdentityRef)workItemResponse.Fields[FieldNames.SystemAssignedTo];
+                return identity.DisplayName;
+            }
+            return null;
+        }
+
+        public void AddQAReviewerToUserStory(int devUserStoryWitId)
+        {
+            var devUserStoryWitInfo = GetWorkItem(devUserStoryWitId);
+            if (!devUserStoryWitInfo.Fields[FieldNames.SystemWorkItemType].Equals("User Story"))
+                return;
+
+            if (!devUserStoryWitInfo.Fields.ContainsKey(FieldNames.CustomQAReviewer))
+            {
+                string qaReviewer = null;
+
+                if (IsTestCaseCreationUserStoryExists(devUserStoryWitInfo, out int testCreationWitId, out bool missingTestCreationTag))
+                    qaReviewer = GetAssignedTo(testCreationWitId);
+
+                if (IsTestCaseExecutionUserStoryExists(devUserStoryWitInfo, out int testExecutionWitId, out bool missingTestExecutionTag))
+                {
+                    string temp = GetAssignedTo(testExecutionWitId);
+                    if (temp != null && qaReviewer != null && !temp.Equals(qaReviewer))
+                        throw new Exception("The test case execution user story was assigned to a different QA resource.");
+                }
+
+                if (string.IsNullOrWhiteSpace(qaReviewer))
+                    return;
+                else
+                {
+                    var updateUSCreation = new UpdateUserStoryRequest()
+                    {
+                        WorkItemId = devUserStoryWitId,
+                        QAReviewer = qaReviewer,
+                    };
+
+                    try
+                    {
+                        WorkItem updateCreationWIT_Update = UpdateUserStoryWorkItem(updateUSCreation);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                        throw;
+                    }
+
+                }
+            }
         }
 
         public void UpdateWorkItemTitles(int witId, Dictionary<string, string> oldAndNewTitles)
@@ -167,7 +251,6 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                 witWithoutLinks.Add(witId);
                 return;
             }
-
         }
 
         public void GetWorkItemTitles(int witId, string filterWord, string tag, ref List<string> workItemTitles, ref List<int> witsWithoutTag, ref List<int> witsWithoutProperTitle)
@@ -194,25 +277,50 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                 workItemTitles.Add(workItemResponse.Fields[FieldNames.SystemTitle].ToString());
         }
 
-        public void CreateQAUserStoriesForPloceus(int parentWitId, int qaFeatureWitId, string dueDate = "2022-11-30T00:00:00Z")
+        public void GetFeatureIdsFromEpicId(int devEpicId, out List<int> devFeatureIds)
         {
-            var workItemResponse = GetWorkItem(parentWitId);
-            if (workItemResponse.Relations == null || workItemResponse.Relations.Count() == 0)
+            devFeatureIds = new List<int>();
+            var epicWitInfo = GetWorkItem(devEpicId);
+            if (epicWitInfo.Relations == null || epicWitInfo.Relations.Count() == 0)
                 return;
 
-            List<string> relationsUrls = workItemResponse.Relations.Select(item => item.Url).ToList();
+            List<string> relationsUrls = epicWitInfo.Relations.Select(item => item.Url).ToList();
             relationsUrls.RemoveAll(item => item.StartsWith("vstfs:///"));
+            relationsUrls.RemoveAll(item => item.Contains("/attachments/"));
 
-            List<int> devUserStoryWitIds = relationsUrls.Select(urls => Convert.ToInt32(urls.Split("/").Last())).ToList();
+            devFeatureIds = relationsUrls.Select(urls => Convert.ToInt32(urls.Split("/").Last())).ToList();
+            devFeatureIds.Sort();
+        }
+
+        public void GetUserStoryIdsFromFeatureId(int devFeatureId, out List<int> devUserStoryWitIds)
+        {
+            devUserStoryWitIds = new List<int>();
+            var featureWitInfo = GetWorkItem(devFeatureId);
+            if (featureWitInfo.Relations == null || featureWitInfo.Relations.Count() == 0)
+                return;
+
+            List<string> relationsUrls = featureWitInfo.Relations.Select(item => item.Url).ToList();
+            relationsUrls.RemoveAll(item => item.StartsWith("vstfs:///"));
+            relationsUrls.RemoveAll(item => item.Contains("/attachments/"));
+
+            devUserStoryWitIds = relationsUrls.Select(urls => Convert.ToInt32(urls.Split("/").Last())).ToList();
             devUserStoryWitIds.Sort();
+        }
+
+        public void CreateQAUserStoriesForPloceus(int devFeatureId, int qaFeatureWitId, string dueDate = "2023-02-01T00:00:00Z")
+        {
+            GetUserStoryIdsFromFeatureId(devFeatureId, out List<int> devUserStoryWitIds);
 
             foreach (int devUserStoryWitId in devUserStoryWitIds)
             {
-                if (devUserStoryWitId == parentWitId)
+                if (devUserStoryWitId == devFeatureId)
                     continue;
 
-                var devUserStoryWit = GetWorkItem(devUserStoryWitId);
-                if (!devUserStoryWit.Fields[FieldNames.SystemWorkItemType].Equals("User Story"))
+                var devUserStoryWitInfo = GetWorkItem(devUserStoryWitId);
+                if (!devUserStoryWitInfo.Fields[FieldNames.SystemWorkItemType].Equals("User Story"))
+                    continue;
+
+                if (!devUserStoryWitInfo.Fields[FieldNames.SystemState].Equals("Initiate QA"))
                     continue;
 
                 WorkItem creationWIT = null;
@@ -220,7 +328,7 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
 
                 CultureInfo culterInfo = CultureInfo.InvariantCulture;
 
-                string title = devUserStoryWit.Fields[FieldNames.SystemTitle].ToString().Trim();
+                string title = devUserStoryWitInfo.Fields[FieldNames.SystemTitle].ToString().Trim();
                 string newTitle = title.Replace("v.3.9.0.", string.Empty, true, culterInfo);
                 newTitle = newTitle.Replace("_v.3.9.0.", string.Empty, true, culterInfo);
                 newTitle = newTitle.Replace("v3.9.0.", string.Empty, true, culterInfo);
@@ -243,7 +351,10 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                 if (newTitle.StartsWith("Create ", false, CultureInfo.InvariantCulture))
                     newTitle = newTitle.Replace("Create ", string.Empty, true, CultureInfo.InvariantCulture);
 
-                if (!IsTestPlanCreationUserStoryExists(devUserStoryWit))
+                if (newTitle.StartsWith("Refactoring ", false, CultureInfo.InvariantCulture))
+                    newTitle = newTitle.Replace("Refactoring ", string.Empty, true, CultureInfo.InvariantCulture);
+
+                if (!IsTestCaseCreationUserStoryExists(devUserStoryWitInfo, out int testCreationWitId, out bool missingTestCreationTag))
                 {
                     string creationTitle = $"{newTitle} {TestCaseCreation}";
                     var creationRequest = new CreateUserStoryRequest()
@@ -271,7 +382,7 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                     WorkItem updateCreationWIT_Update = UpdateUserStoryWorkItem(updateUSCreation);
                 }
 
-                if (!IsTestPlanExecutionUserStoryExists(devUserStoryWit))
+                if (!IsTestCaseExecutionUserStoryExists(devUserStoryWitInfo, out int testExecutionWitId, out bool missingTestExecutionTag))
                 {
                     string executionTitle = $"{newTitle} {TestCaseExecution}";
                     var executionRequest = new CreateUserStoryRequest()
@@ -323,6 +434,36 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
                         }
                     };
                     WorkItem updatedWorkItem = UpdateUserStoryWorkItem(updateUserStoryWorkItem);
+                }
+
+                if(missingTestCreationTag && testCreationWitId!=0)
+                {
+                    // Add Tag
+                    var updateWorkItem = new UpdateWorkItemRequest()
+                    {
+                        WorkItemId = testCreationWitId,
+                        Tags = new List<string>()
+                        {
+                            prepTag
+                        }
+                    };
+
+                    var update = UpdateWorkItem(updateWorkItem);
+                    Console.WriteLine();
+                }
+                if (missingTestExecutionTag && testExecutionWitId != 0)
+                {
+                    var updateWorkItem = new UpdateWorkItemRequest()
+                    {
+                        WorkItemId = testExecutionWitId,
+                        Tags = new List<string>()
+                        {
+                            execTag
+                        }
+                    };
+
+                    var update = UpdateWorkItem(updateWorkItem);
+                    Console.WriteLine();
                 }
             }
         }
@@ -472,6 +613,7 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
 
             string titlePath = referenceNames["Title"];
             string descriptionPath = referenceNames["Description"];
+            string qaReviewerPath = referenceNames["QA Reviewer"];
             string areaPath = referenceNames["Area Path"];
             string iterationPath = referenceNames["Iteration Path"];
             string tagPath = referenceNames["Tags"];
@@ -482,6 +624,7 @@ namespace AzDO.API.Wrappers.WorkItemTracking.WorkItems
             var pathsAndValues = new Dictionary<string, string>
             {
                 { titlePath, request.Title },
+                { qaReviewerPath, request.QAReviewer },
                 { areaPath, request.AreaPath },
                 { iterationPath, request.IterationPath },
                 { tagPath, tagValue },

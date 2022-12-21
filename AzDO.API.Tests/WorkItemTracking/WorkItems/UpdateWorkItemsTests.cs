@@ -37,18 +37,42 @@ namespace AzDO.API.Tests.WorkItemTracking.WorkItems
         }
 
         [TestMethod]
-        public void CreateAndUpdateQAUserStories()
+        public void AddQAReviewerToUserStory()
         {
-            int qaFeatureWitId = 71;
-
             var devFeatureIds = new List<int>()
             {
-                330,345,75,205,615,1605,1829
+                57,58,59,61,62,63,60,64,65,1797,1938
             };
 
             foreach (var devFeatureId in devFeatureIds)
             {
-                _workItemsCustomWrapper.CreateQAUserStoriesForPloceus(devFeatureId, qaFeatureWitId);
+                _workItemsCustomWrapper.GetUserStoryIdsFromFeatureId(devFeatureId, out List<int> devUserStoryWitIds);
+                foreach (int devUserStoryWitId in devUserStoryWitIds)
+                {
+                    _workItemsCustomWrapper.AddQAReviewerToUserStory(devUserStoryWitId);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void CreateAndUpdateQAUserStories()
+        {
+            int devEpicId = 68;
+            int qaFeatureId = 71;
+
+            //var devFeatureIds = new List<int>()
+            //{
+            //    3142
+            //};
+
+            _workItemsCustomWrapper.GetFeatureIdsFromEpicId(devEpicId, out List<int> devFeatureIds);
+            devFeatureIds.Reverse();
+
+            foreach (var devFeatureId in devFeatureIds)
+            {
+                if (devFeatureId == qaFeatureId)
+                    continue;
+                _workItemsCustomWrapper.CreateQAUserStoriesForPloceus(devFeatureId, qaFeatureId);
             }
 
             Console.WriteLine();
