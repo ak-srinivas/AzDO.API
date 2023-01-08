@@ -39,7 +39,7 @@ namespace AzDO.API.Tests
         };
 
 
-        // TODO: Get this from release definitions API endpoint
+        // TODO: Get this from release definitions API endpoint (Refer to API documentation)
         protected Dictionary<string, int> BuildDefs = new Dictionary<string, int>()
         {
             { BuildDefinitions.Pipeline1, 22 }, // Your pipeline name and it's definition id
