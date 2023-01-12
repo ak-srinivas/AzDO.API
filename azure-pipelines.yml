@@ -34,4 +34,4 @@ steps:
       # Write your PowerShell commands here.
       
       Write-Host "Hello World"
-      echo "This is build id: ${Build_BuildId}"
+      echo "This is build id: $(Build.BuildId)"
